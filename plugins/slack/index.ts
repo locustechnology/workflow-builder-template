@@ -56,10 +56,10 @@ const slackPlugin: IntegrationPlugin = {
         {
           key: "slackMessage",
           label: "Message",
-          type: "template-textarea",
+          type: "text", // Changed from "template-textarea" to disable badge rendering
           placeholder:
             "Your message. Use {{NodeName.field}} to insert data from previous nodes.",
-          rows: 4,
+          // rows: 4, // "text" type uses Input, so rows isn't supported. The user can still type templates, but they won't render as badges.
           example: "Hello from my workflow!",
           required: true,
         },

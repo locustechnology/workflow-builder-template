@@ -28,6 +28,7 @@ import {
   isSavingAtom,
   isSidebarCollapsedAtom,
   isWorkflowOwnerAtom,
+  isWorkflowLoadedAtom,
   nodesAtom,
   rightPanelWidthAtom,
   selectedExecutionIdAtom,
@@ -132,6 +133,7 @@ const WorkflowEditor = ({ params }: WorkflowPageProps) => {
   const [isOwner, setIsWorkflowOwner] = useAtom(isWorkflowOwnerAtom);
   const setGlobalIntegrations = useSetAtom(integrationsAtom);
   const setIntegrationsLoaded = useSetAtom(integrationsLoadedAtom);
+  const setIsWorkflowLoaded = useSetAtom(isWorkflowLoadedAtom);
   const integrationsVersion = useAtomValue(integrationsVersionAtom);
 
   // Panel width state for resizing
@@ -310,6 +312,7 @@ const WorkflowEditor = ({ params }: WorkflowPageProps) => {
         setNodes(nodesWithoutSelection);
         setEdges(workflowData.edges || []);
         setCurrentWorkflowName(workflowData.name || "AI Generated Workflow");
+        setIsWorkflowLoaded(true);
 
         await api.workflow.update(workflowId, {
           name: workflowData.name,
@@ -363,6 +366,7 @@ const WorkflowEditor = ({ params }: WorkflowPageProps) => {
       );
       setIsWorkflowOwner(workflow.isOwner !== false); // Default to true if not set
       setHasUnsavedChanges(false);
+      setIsWorkflowLoaded(true);
       setWorkflowNotFound(false);
     } catch (error) {
       console.error("Failed to load workflow:", error);
@@ -387,6 +391,7 @@ const WorkflowEditor = ({ params }: WorkflowPageProps) => {
 
   useEffect(() => {
     const loadWorkflowData = async () => {
+      setIsWorkflowLoaded(false);
       const isGeneratingParam = searchParams?.get("generating") === "true";
       const storedPrompt = sessionStorage.getItem("ai-prompt");
       const storedWorkflowId = sessionStorage.getItem("generating-workflow-id");
@@ -418,6 +423,7 @@ const WorkflowEditor = ({ params }: WorkflowPageProps) => {
     nodes.length,
     generateWorkflowFromAI,
     loadExistingWorkflow,
+    setIsWorkflowLoaded,
   ]);
 
   // Auto-fix invalid/missing integrations on workflow load or when integrations change
