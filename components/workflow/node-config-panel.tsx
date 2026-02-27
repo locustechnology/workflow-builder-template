@@ -851,6 +851,7 @@ export const PanelInner = () => {
                       disabled={isGenerating || !isOwner}
                       id="label"
                       onChange={(e) => handleUpdateLabel(e.target.value)}
+                      placeholder="e.g. Webhook Trigger"
                       value={selectedNode.data.label}
                     />
                   </div>
@@ -867,8 +868,51 @@ export const PanelInner = () => {
                       value={selectedNode.data.description || ""}
                     />
                   </div>
+
+                  <div className="space-y-2">
+                    <Label className="ml-1" htmlFor="node-id">
+                      Node ID
+                    </Label>
+                    <div className="flex gap-1.5">
+                      <Input
+                        className="font-mono text-xs text-muted-foreground"
+                        disabled
+                        id="node-id"
+                        value={selectedNode.id}
+                      />
+                      <Button
+                        className="shrink-0"
+                        onClick={() => {
+                          navigator.clipboard.writeText(selectedNode.id);
+                          toast.success("Node ID copied");
+                        }}
+                        size="icon"
+                        title="Copy Node ID"
+                        variant="outline"
+                      >
+                        <Copy className="size-4" />
+                      </Button>
+                    </div>
+                    <div className="space-y-1 ml-1">
+                      {selectedNode.data.label && (
+                        <p className="text-muted-foreground text-xs">
+                          By label:{" "}
+                          <code className="rounded bg-muted px-1 py-0.5 text-[11px]">
+                            {`{{@${selectedNode.data.label}.fieldName}}`}
+                          </code>
+                        </p>
+                      )}
+                      <p className="text-muted-foreground text-xs">
+                        By node ID:{" "}
+                        <code className="rounded bg-muted px-1 py-0.5 text-[11px]">
+                          {`{{@${selectedNode.id}.fieldName}}`}
+                        </code>
+                      </p>
+                    </div>
+                  </div>
                 </>
               ) : null}
+
 
               {!isOwner && (
                 <div className="rounded-lg border border-muted bg-muted/30 p-3">

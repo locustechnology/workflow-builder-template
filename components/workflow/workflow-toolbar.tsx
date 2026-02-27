@@ -135,13 +135,36 @@ function extractTemplateReferences(
     return [];
   }
 
-  const pattern = /\{\{@([^:]+):([^}]+)\}\}/g;
+  // Matches both {{@nodeId:DisplayName.field}} and {{@nodeId.field}}
+  const pattern = /\{\{@([^}]+)\}\}/g;
   const matches = value.matchAll(pattern);
 
-  return Array.from(matches).map((match) => ({
-    nodeId: match[1],
-    displayText: match[2],
-  }));
+  return Array.from(matches).map((match) => {
+    const inner = match[1];
+    const colonIndex = inner.indexOf(":");
+    let nodeId: string;
+    let displayText: string;
+
+    if (colonIndex !== -1) {
+      // Old format: nodeId:DisplayName.field
+      nodeId = inner.substring(0, colonIndex);
+      displayText = match[0]; // Full template string for display
+    } else {
+      // New format: nodeId.field or just nodeId
+      const dotIndex = inner.indexOf(".");
+      if (dotIndex !== -1) {
+        nodeId = inner.substring(0, dotIndex);
+      } else {
+        nodeId = inner;
+      }
+      displayText = match[0];
+    }
+
+    return {
+      nodeId,
+      displayText,
+    };
+  });
 }
 
 // Recursively extract all template references from a config object
@@ -182,6 +205,9 @@ function getBrokenTemplateReferences(
   nodes: WorkflowNode[]
 ): BrokenTemplateReferenceInfo[] {
   const nodeIds = new Set(nodes.map((n) => n.id));
+  const nodeLabels = new Set(
+    nodes.filter((n) => n.data.label).map((n) => n.data.label as string)
+  );
   const brokenByNode: BrokenTemplateReferenceInfo[] = [];
 
   for (const node of nodes) {
@@ -196,7 +222,10 @@ function getBrokenTemplateReferences(
     }
 
     const allRefs = extractAllTemplateReferences(config);
-    const brokenRefs = allRefs.filter((ref) => !nodeIds.has(ref.nodeId));
+    // Reference is valid if it matches either a node ID or a node label
+    const brokenRefs = allRefs.filter(
+      (ref) => !nodeIds.has(ref.nodeId) && !nodeLabels.has(ref.nodeId)
+    );
 
     if (brokenRefs.length > 0) {
       // Get action for label lookups

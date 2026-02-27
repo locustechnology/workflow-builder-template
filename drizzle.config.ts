@@ -10,4 +10,5 @@ export default {
   dbCredentials: {
     url: process.env.DATABASE_URL || "postgres://localhost:5432/workflow",
   },
+  tablesFilter: ["gwf_*"],
 } satisfies Config;

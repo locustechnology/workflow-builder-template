@@ -44,6 +44,36 @@ type ExecutionResult = {
 
 type NodeOutputs = Record<string, { label: string; data: unknown }>;
 
+/**
+ * Look up an output first by sanitized node ID, then by label
+ * Allows templates like {{@trigger-1.field}} to resolve
+ * even when the actual node ID is a nanoid (e.g. AxXFxEPPVCy6qnBQAjP5e),
+ * by falling back to matching outputs[*].label === displayName.
+ */
+function findOutput(
+  outputs: NodeOutputs,
+  sanitizedNodeId: string,
+  rawNodeId: string,
+  displayName?: string
+): { label: string; data: unknown } | undefined {
+  // Primary: exact key match (covers both sanitized ID and already-plain IDs)
+  if (outputs[sanitizedNodeId]) {
+    return outputs[sanitizedNodeId];
+  }
+  // Fallback: match by label.
+  // - For old-format templates ({{@id:DisplayName.field}}), displayName is provided.
+  // - For new-format templates ({{@label.field}}), no displayName — use rawNodeId
+  //   itself as the label to search for (since the user wrote their label directly).
+  const labelToMatch = displayName ?? rawNodeId;
+  const normalizedLabel = labelToMatch.trim().toLowerCase();
+  for (const output of Object.values(outputs)) {
+    if (output.label.trim().toLowerCase() === normalizedLabel) {
+      return output;
+    }
+  }
+  return undefined;
+}
+
 export type WorkflowExecutionInput = {
   nodes: WorkflowNode[];
   edges: WorkflowEdge[];
@@ -66,14 +96,16 @@ function replaceTemplateVariable(
   varCounter: { value: number }
 ): string {
   const sanitizedNodeId = nodeId.replace(/[^a-zA-Z0-9]/g, "_");
-  const output = outputs[sanitizedNodeId];
+  // The display name is the part of rest before the first dot
+  const dotIndex = rest.indexOf(".");
+  const displayName = dotIndex !== -1 ? rest.substring(0, dotIndex) : rest;
+  const output = findOutput(outputs, sanitizedNodeId, nodeId, displayName);
 
   if (!output) {
     console.log("[Condition] Output not found for node:", sanitizedNodeId);
     return match;
   }
 
-  const dotIndex = rest.indexOf(".");
   let value: unknown;
 
   if (dotIndex === -1) {
@@ -156,12 +188,33 @@ function evaluateConditionExpression(
       const evalContext: Record<string, unknown> = {};
       const resolvedValues: Record<string, unknown> = {};
       let transformedExpression = conditionExpression;
-      const templatePattern = /\{\{@([^:]+):([^}]+)\}\}/g;
+      // Matches both {{@nodeId:DisplayName.field}} and {{@nodeId.field}}
+      const templatePattern = /\{\{@([^}]+)\}\}/g;
       const varCounter = { value: 0 };
 
       transformedExpression = transformedExpression.replace(
         templatePattern,
-        (match, nodeId, rest) => {
+        (match, inner) => {
+          // Parse nodeId and rest from inner:
+          //   "nodeId:DisplayName.field"  →  nodeId="nodeId", rest="DisplayName.field"
+          //   "nodeId.field"              →  nodeId="nodeId", rest="field"
+          const colonIndex = inner.indexOf(":");
+          let nodeId: string;
+          let rest: string;
+          if (colonIndex !== -1) {
+            nodeId = inner.substring(0, colonIndex);
+            rest = inner.substring(colonIndex + 1);
+          } else {
+            // No colon: nodeId.field or just nodeId
+            const dotIndex = inner.indexOf(".");
+            if (dotIndex !== -1) {
+              nodeId = inner.substring(0, dotIndex);
+              rest = inner.substring(dotIndex + 1);
+            } else {
+              nodeId = inner;
+              rest = "";
+            }
+          }
           const varName = replaceTemplateVariable(
             match,
             nodeId,
@@ -289,25 +342,63 @@ function processTemplates(
 
   for (const [key, value] of Object.entries(config)) {
     if (typeof value === "string") {
-      // Process template variables like {{@nodeId:Label.field}}
+      // Process template variables — supports both:
+      //   {{@nodeId:DisplayName.field}}  (old format with label)
+      //   {{@nodeId.field}}              (new format, direct ID)
       let processedValue = value;
-      const templatePattern = /\{\{@([^:]+):([^}]+)\}\}/g;
+      const templatePattern = /\{\{@([^}]+)\}\}/g;
       processedValue = processedValue.replace(
         templatePattern,
         // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Template processing requires nested logic
-        (match, nodeId, rest) => {
+        (match, inner) => {
+          // Parse nodeId and rest from inner
+          const colonIndex = inner.indexOf(":");
+          let nodeId: string;
+          let rest: string;
+          if (colonIndex !== -1) {
+            // {{@nodeId:DisplayName.field}}
+            nodeId = inner.substring(0, colonIndex);
+            rest = inner.substring(colonIndex + 1);
+          } else {
+            // {{@nodeId.field}} or {{@nodeId}}
+            const dotIndex = inner.indexOf(".");
+            if (dotIndex !== -1) {
+              nodeId = inner.substring(0, dotIndex);
+              rest = inner.substring(dotIndex + 1);
+            } else {
+              nodeId = inner;
+              rest = "";
+            }
+          }
+
           const sanitizedNodeId = nodeId.replace(/[^a-zA-Z0-9]/g, "_");
-          const output = outputs[sanitizedNodeId];
+          // For old-format templates, the display name is the part before the first dot in rest
+          // e.g. rest = "Webhook Trigger.title" → displayName = "Webhook Trigger"
+          // For new-format templates, rest is already just the field path
+          const dotIndexInRest = rest.indexOf(".");
+          const displayName = colonIndex !== -1 && dotIndexInRest !== -1
+            ? rest.substring(0, dotIndexInRest)
+            : undefined;
+          // Look up by sanitized ID first, fall back to label matching
+          const output = findOutput(outputs, sanitizedNodeId, nodeId, displayName);
           if (!output) {
             return match;
           }
 
-          const dotIndex = rest.indexOf(".");
-          if (dotIndex === -1) {
+          // Determine the actual field path
+          let fieldPath: string;
+          if (colonIndex !== -1) {
+            // Old format: rest = "DisplayName.field" → fieldPath = "field"
+            fieldPath = dotIndexInRest !== -1 ? rest.substring(dotIndexInRest + 1) : "";
+          } else {
+            // New format: rest is already the field path
+            fieldPath = rest;
+          }
+
+          if (!fieldPath) {
             // No field path, return the entire output data
             const data = output.data;
             if (data === null || data === undefined) {
-              // Return empty string for null/undefined data (e.g., from disabled nodes)
               return "";
             }
             if (typeof data === "object") {
@@ -321,7 +412,6 @@ function processTemplates(
             return "";
           }
 
-          const fieldPath = rest.substring(dotIndex + 1);
           const fields = fieldPath.split(".");
           // biome-ignore lint/suspicious/noExplicitAny: Dynamic output data traversal
           let current: any = output.data;
@@ -345,12 +435,10 @@ function processTemplates(
             if (current && typeof current === "object") {
               current = current[field];
             } else {
-              // Field access failed, return empty string
               return "";
             }
           }
 
-          // Convert value to string, using JSON.stringify for objects/arrays
           if (current === null || current === undefined) {
             return "";
           }
