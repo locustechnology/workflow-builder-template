@@ -944,11 +944,11 @@ function useWorkflowActions(state: ReturnType<typeof useWorkflowState>) {
 
     setIsDuplicating(true);
     try {
-      // Auto-sign in as anonymous if user has no session
+      // If user has no session, duplication will fail with auth error
       if (!session?.user) {
-        await authClient.signIn.anonymous();
-        // Wait for session to be established
-        await new Promise((resolve) => setTimeout(resolve, 100));
+        toast.error("You must be signed in to duplicate a workflow.");
+        setIsDuplicating(false);
+        return;
       }
 
       const newWorkflow = await api.workflow.duplicate(currentWorkflowId);
@@ -1498,8 +1498,7 @@ export const WorkflowToolbar = ({ workflowId }: WorkflowToolbarProps) => {
           <div className="flex items-center gap-2">
             {!workflowId && (
               <>
-                <GitHubStarsButton />
-                <DeployButton />
+                {/* Removed GitHub Stars and Deploy Buttons */}
               </>
             )}
             {workflowId && !state.isOwner && (

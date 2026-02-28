@@ -54,16 +54,11 @@ const Home = () => {
 
   // Update page title when workflow name changes
   useEffect(() => {
-    document.title = `${currentWorkflowName} - AI Workflow Builder`;
+    document.title = `${currentWorkflowName} - GoStudio Workflow`;
   }, [currentWorkflowName]);
 
-  // Helper to create anonymous session if needed
-  const ensureSession = useCallback(async () => {
-    if (!session) {
-      await authClient.signIn.anonymous();
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
-  }, [session]);
+  // No anonymous session creation
+  const ensureSession = useCallback(async () => { }, []);
 
   // Handler to add the first node (replaces the "add" node)
   const handleAddNode = useCallback(() => {

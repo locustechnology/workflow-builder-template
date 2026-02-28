@@ -19,38 +19,11 @@ export function AddNode({ data }: NodeProps & { data?: AddNodeData }) {
           Powered by{" "}
           <a
             className="underline underline-offset-2 transition duration-200 ease-out hover:text-foreground"
-            href="https://useworkflow.dev/"
+            href="https://gostudio.ai"
             rel="noopener noreferrer"
             target="_blank"
           >
-            Workflow
-          </a>
-          ,{" "}
-          <a
-            className="underline underline-offset-2 transition duration-200 ease-out hover:text-foreground"
-            href="https://ai-sdk.dev/"
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            AI SDK
-          </a>
-          ,{" "}
-          <a
-            className="underline underline-offset-2 transition duration-200 ease-out hover:text-foreground"
-            href="https://vercel.com/ai-gateway"
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            AI Gateway
-          </a>{" "}
-          and{" "}
-          <a
-            className="underline underline-offset-2 transition duration-200 ease-out hover:text-foreground"
-            href="https://ai-sdk.dev/elements"
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            AI Elements
+            gostudio.ai
           </a>
         </p>
       </div>

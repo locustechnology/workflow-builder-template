@@ -17,9 +17,11 @@ import { mono, sans } from "@/lib/fonts";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "AI Workflow Builder - Visual Workflow Automation",
-  description:
-    "Build powerful AI-driven workflow automations with a visual, node-based editor. Built with Next.js and React Flow.",
+  title: "AI GoStudio Workflow - Visual Workflow Automation",
+  description: "Build powerful AI-driven workflow automations with a visual, node-based editor. Built with Next.js and React Flow.",
+  icons: {
+    icon: "https://gostudio-web-cdn.b-cdn.net/public/99.svg",
+  },
 };
 
 export const viewport: Viewport = {

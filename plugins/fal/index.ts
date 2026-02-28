@@ -4,7 +4,8 @@ import { FalIcon } from "./icon";
 
 const falPlugin: IntegrationPlugin = {
   type: "fal",
-  label: "fal.ai",
+  // label: "fal.ai",
+  label: "gostudio.ai",
   description: "Fast AI inference for image, video, and audio generation",
 
   icon: FalIcon,
@@ -14,12 +15,14 @@ const falPlugin: IntegrationPlugin = {
       id: "falApiKey",
       label: "API Key",
       type: "password",
-      placeholder: "fal_...",
+      // placeholder: "fal_...",
+      placeholder: "gostudio_...",
       configKey: "apiKey",
       envVar: "FAL_API_KEY",
       helpText: "Get your API key from ",
       helpLink: {
-        text: "fal.ai/dashboard/keys",
+        // text: "fal.ai/dashboard/keys",
+        text: "gostudio.ai/dashboard/keys",
         url: "https://fal.ai/dashboard/keys",
       },
     },
@@ -37,7 +40,8 @@ const falPlugin: IntegrationPlugin = {
       slug: "generate-image",
       label: "Generate Image",
       description: "Generate images using Flux models",
-      category: "fal.ai",
+      // category: "fal.ai",
+      category: "gostudio.ai",
       stepFunction: "falGenerateImageStep",
       stepImportPath: "generate-image",
       outputFields: [
@@ -103,7 +107,8 @@ const falPlugin: IntegrationPlugin = {
       slug: "generate-video",
       label: "Generate Video",
       description: "Generate videos from text or images",
-      category: "fal.ai",
+      // category: "fal.ai",
+      category: "gostudio.ai",
       stepFunction: "falGenerateVideoStep",
       stepImportPath: "generate-video",
       outputFields: [
@@ -147,7 +152,8 @@ const falPlugin: IntegrationPlugin = {
       slug: "upscale-image",
       label: "Upscale Image",
       description: "Upscale images to higher resolution",
-      category: "fal.ai",
+      // category: "fal.ai",
+      category: "gostudio.ai",
       stepFunction: "falUpscaleImageStep",
       stepImportPath: "upscale-image",
       outputFields: [
@@ -192,7 +198,8 @@ const falPlugin: IntegrationPlugin = {
       slug: "remove-background",
       label: "Remove Background",
       description: "Remove background from images",
-      category: "fal.ai",
+      // category: "fal.ai",
+      category: "gostudio.ai",
       stepFunction: "falRemoveBackgroundStep",
       stepImportPath: "remove-background",
       outputFields: [
@@ -214,7 +221,8 @@ const falPlugin: IntegrationPlugin = {
       slug: "image-to-image",
       label: "Image to Image",
       description: "Transform images with text prompts",
-      category: "fal.ai",
+      // category: "fal.ai",
+      category: "gostudio.ai",
       stepFunction: "falImageToImageStep",
       stepImportPath: "image-to-image",
       outputFields: [
