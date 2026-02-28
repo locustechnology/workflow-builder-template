@@ -1,4 +1,4 @@
-CREATE TABLE "gwf_accounts" (
+CREATE TABLE IF NOT EXISTS "gwf_accounts" (
 	"id" text PRIMARY KEY NOT NULL,
 	"account_id" text NOT NULL,
 	"provider_id" text NOT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE "gwf_accounts" (
 	"updated_at" timestamp NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "gwf_api_keys" (
+CREATE TABLE IF NOT EXISTS "gwf_api_keys" (
 	"id" text PRIMARY KEY NOT NULL,
 	"user_id" text NOT NULL,
 	"name" text,
@@ -24,7 +24,7 @@ CREATE TABLE "gwf_api_keys" (
 	"last_used_at" timestamp
 );
 --> statement-breakpoint
-CREATE TABLE "gwf_integrations" (
+CREATE TABLE IF NOT EXISTS "gwf_integrations" (
 	"id" text PRIMARY KEY NOT NULL,
 	"user_id" text NOT NULL,
 	"name" text NOT NULL,
@@ -35,7 +35,7 @@ CREATE TABLE "gwf_integrations" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "gwf_sessions" (
+CREATE TABLE IF NOT EXISTS "gwf_sessions" (
 	"id" text PRIMARY KEY NOT NULL,
 	"expires_at" timestamp NOT NULL,
 	"token" text NOT NULL,
@@ -47,7 +47,7 @@ CREATE TABLE "gwf_sessions" (
 	CONSTRAINT "gwf_sessions_token_unique" UNIQUE("token")
 );
 --> statement-breakpoint
-CREATE TABLE "gwf_users" (
+CREATE TABLE IF NOT EXISTS "gwf_users" (
 	"id" text PRIMARY KEY NOT NULL,
 	"name" text,
 	"email" text,
@@ -59,7 +59,7 @@ CREATE TABLE "gwf_users" (
 	CONSTRAINT "gwf_users_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint
-CREATE TABLE "gwf_verifications" (
+CREATE TABLE IF NOT EXISTS "gwf_verifications" (
 	"id" text PRIMARY KEY NOT NULL,
 	"identifier" text NOT NULL,
 	"value" text NOT NULL,
@@ -68,7 +68,7 @@ CREATE TABLE "gwf_verifications" (
 	"updated_at" timestamp
 );
 --> statement-breakpoint
-CREATE TABLE "gwf_workflow_execution_logs" (
+CREATE TABLE IF NOT EXISTS "gwf_workflow_execution_logs" (
 	"id" text PRIMARY KEY NOT NULL,
 	"execution_id" text NOT NULL,
 	"node_id" text NOT NULL,
@@ -84,7 +84,7 @@ CREATE TABLE "gwf_workflow_execution_logs" (
 	"timestamp" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "gwf_workflow_executions" (
+CREATE TABLE IF NOT EXISTS "gwf_workflow_executions" (
 	"id" text PRIMARY KEY NOT NULL,
 	"workflow_id" text NOT NULL,
 	"user_id" text NOT NULL,
@@ -97,7 +97,7 @@ CREATE TABLE "gwf_workflow_executions" (
 	"duration" text
 );
 --> statement-breakpoint
-CREATE TABLE "gwf_workflows" (
+CREATE TABLE IF NOT EXISTS "gwf_workflows" (
 	"id" text PRIMARY KEY NOT NULL,
 	"name" text NOT NULL,
 	"description" text,
