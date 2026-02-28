@@ -1,11 +1,11 @@
 {
-  "id": "802f409a-5c8e-497b-8611-e8a191dfcd41",
+  "id": "0c73ce6e-c636-49f1-bec0-b8fd40e28442",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
-    "public.accounts": {
-      "name": "accounts",
+    "public.gwf_accounts": {
+      "name": "gwf_accounts",
       "schema": "",
       "columns": {
         "id": {
@@ -89,12 +89,16 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "accounts_user_id_users_id_fk": {
-          "name": "accounts_user_id_users_id_fk",
-          "tableFrom": "accounts",
-          "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+        "gwf_accounts_user_id_gwf_users_id_fk": {
+          "name": "gwf_accounts_user_id_gwf_users_id_fk",
+          "tableFrom": "gwf_accounts",
+          "tableTo": "gwf_users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -105,8 +109,156 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.sessions": {
-      "name": "sessions",
+    "public.gwf_api_keys": {
+      "name": "gwf_api_keys",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "key_hash": {
+          "name": "key_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "key_prefix": {
+          "name": "key_prefix",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "last_used_at": {
+          "name": "last_used_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "gwf_api_keys_user_id_gwf_users_id_fk": {
+          "name": "gwf_api_keys_user_id_gwf_users_id_fk",
+          "tableFrom": "gwf_api_keys",
+          "tableTo": "gwf_users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.gwf_integrations": {
+      "name": "gwf_integrations",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "config": {
+          "name": "config",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_managed": {
+          "name": "is_managed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "gwf_integrations_user_id_gwf_users_id_fk": {
+          "name": "gwf_integrations_user_id_gwf_users_id_fk",
+          "tableFrom": "gwf_integrations",
+          "tableTo": "gwf_users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.gwf_sessions": {
+      "name": "gwf_sessions",
       "schema": "",
       "columns": {
         "id": {
@@ -160,30 +312,36 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "sessions_user_id_users_id_fk": {
-          "name": "sessions_user_id_users_id_fk",
-          "tableFrom": "sessions",
-          "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+        "gwf_sessions_user_id_gwf_users_id_fk": {
+          "name": "gwf_sessions_user_id_gwf_users_id_fk",
+          "tableFrom": "gwf_sessions",
+          "tableTo": "gwf_users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "sessions_token_unique": {
-          "name": "sessions_token_unique",
+        "gwf_sessions_token_unique": {
+          "name": "gwf_sessions_token_unique",
           "nullsNotDistinct": false,
-          "columns": ["token"]
+          "columns": [
+            "token"
+          ]
         }
       },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.users": {
-      "name": "users",
+    "public.gwf_users": {
+      "name": "gwf_users",
       "schema": "",
       "columns": {
         "id": {
@@ -241,18 +399,20 @@
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "users_email_unique": {
-          "name": "users_email_unique",
+        "gwf_users_email_unique": {
+          "name": "gwf_users_email_unique",
           "nullsNotDistinct": false,
-          "columns": ["email"]
+          "columns": [
+            "email"
+          ]
         }
       },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.verifications": {
-      "name": "verifications",
+    "public.gwf_verifications": {
+      "name": "gwf_verifications",
       "schema": "",
       "columns": {
         "id": {
@@ -300,8 +460,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.workflow_execution_logs": {
-      "name": "workflow_execution_logs",
+    "public.gwf_workflow_execution_logs": {
+      "name": "gwf_workflow_execution_logs",
       "schema": "",
       "columns": {
         "id": {
@@ -387,12 +547,16 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "workflow_execution_logs_execution_id_workflow_executions_id_fk": {
-          "name": "workflow_execution_logs_execution_id_workflow_executions_id_fk",
-          "tableFrom": "workflow_execution_logs",
-          "tableTo": "workflow_executions",
-          "columnsFrom": ["execution_id"],
-          "columnsTo": ["id"],
+        "gwf_workflow_execution_logs_execution_id_gwf_workflow_executions_id_fk": {
+          "name": "gwf_workflow_execution_logs_execution_id_gwf_workflow_executions_id_fk",
+          "tableFrom": "gwf_workflow_execution_logs",
+          "tableTo": "gwf_workflow_executions",
+          "columnsFrom": [
+            "execution_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -403,8 +567,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.workflow_executions": {
-      "name": "workflow_executions",
+    "public.gwf_workflow_executions": {
+      "name": "gwf_workflow_executions",
       "schema": "",
       "columns": {
         "id": {
@@ -471,21 +635,29 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "workflow_executions_workflow_id_workflows_id_fk": {
-          "name": "workflow_executions_workflow_id_workflows_id_fk",
-          "tableFrom": "workflow_executions",
-          "tableTo": "workflows",
-          "columnsFrom": ["workflow_id"],
-          "columnsTo": ["id"],
+        "gwf_workflow_executions_workflow_id_gwf_workflows_id_fk": {
+          "name": "gwf_workflow_executions_workflow_id_gwf_workflows_id_fk",
+          "tableFrom": "gwf_workflow_executions",
+          "tableTo": "gwf_workflows",
+          "columnsFrom": [
+            "workflow_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "workflow_executions_user_id_users_id_fk": {
-          "name": "workflow_executions_user_id_users_id_fk",
-          "tableFrom": "workflow_executions",
-          "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+        "gwf_workflow_executions_user_id_gwf_users_id_fk": {
+          "name": "gwf_workflow_executions_user_id_gwf_users_id_fk",
+          "tableFrom": "gwf_workflow_executions",
+          "tableTo": "gwf_users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -496,8 +668,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.workflows": {
-      "name": "workflows",
+    "public.gwf_workflows": {
+      "name": "gwf_workflows",
       "schema": "",
       "columns": {
         "id": {
@@ -524,18 +696,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "vercel_project_id": {
-          "name": "vercel_project_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "vercel_project_name": {
-          "name": "vercel_project_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
         "nodes": {
           "name": "nodes",
           "type": "jsonb",
@@ -548,24 +708,12 @@
           "primaryKey": false,
           "notNull": true
         },
-        "deployment_status": {
-          "name": "deployment_status",
+        "visibility": {
+          "name": "visibility",
           "type": "text",
           "primaryKey": false,
-          "notNull": false,
-          "default": "'none'"
-        },
-        "deployment_url": {
-          "name": "deployment_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "last_deployed_at": {
-          "name": "last_deployed_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
+          "notNull": true,
+          "default": "'private'"
         },
         "created_at": {
           "name": "created_at",
@@ -584,24 +732,22 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "workflows_user_id_users_id_fk": {
-          "name": "workflows_user_id_users_id_fk",
-          "tableFrom": "workflows",
-          "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+        "gwf_workflows_user_id_gwf_users_id_fk": {
+          "name": "gwf_workflows_user_id_gwf_users_id_fk",
+          "tableFrom": "gwf_workflows",
+          "tableTo": "gwf_users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "workflows_vercel_project_id_unique": {
-          "name": "workflows_vercel_project_id_unique",
-          "nullsNotDistinct": false,
-          "columns": ["vercel_project_id"]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
