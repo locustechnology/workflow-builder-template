@@ -109,11 +109,37 @@ CREATE TABLE IF NOT EXISTS "gwf_workflows" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "gwf_accounts" ADD CONSTRAINT "gwf_accounts_user_id_gwf_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."gwf_users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "gwf_api_keys" ADD CONSTRAINT "gwf_api_keys_user_id_gwf_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."gwf_users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "gwf_integrations" ADD CONSTRAINT "gwf_integrations_user_id_gwf_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."gwf_users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "gwf_sessions" ADD CONSTRAINT "gwf_sessions_user_id_gwf_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."gwf_users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "gwf_workflow_execution_logs" ADD CONSTRAINT "gwf_workflow_execution_logs_execution_id_gwf_workflow_executions_id_fk" FOREIGN KEY ("execution_id") REFERENCES "public"."gwf_workflow_executions"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "gwf_workflow_executions" ADD CONSTRAINT "gwf_workflow_executions_workflow_id_gwf_workflows_id_fk" FOREIGN KEY ("workflow_id") REFERENCES "public"."gwf_workflows"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "gwf_workflow_executions" ADD CONSTRAINT "gwf_workflow_executions_user_id_gwf_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."gwf_users"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "gwf_workflows" ADD CONSTRAINT "gwf_workflows_user_id_gwf_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."gwf_users"("id") ON DELETE no action ON UPDATE no action;
+DO $$
+BEGIN
+    BEGIN
+        ALTER TABLE "gwf_accounts" ADD CONSTRAINT "gwf_accounts_user_id_gwf_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."gwf_users"("id") ON DELETE no action ON UPDATE no action;
+    EXCEPTION WHEN duplicate_object THEN null; END;
+
+    BEGIN
+        ALTER TABLE "gwf_api_keys" ADD CONSTRAINT "gwf_api_keys_user_id_gwf_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."gwf_users"("id") ON DELETE no action ON UPDATE no action;
+    EXCEPTION WHEN duplicate_object THEN null; END;
+
+    BEGIN
+        ALTER TABLE "gwf_integrations" ADD CONSTRAINT "gwf_integrations_user_id_gwf_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."gwf_users"("id") ON DELETE no action ON UPDATE no action;
+    EXCEPTION WHEN duplicate_object THEN null; END;
+
+    BEGIN
+        ALTER TABLE "gwf_sessions" ADD CONSTRAINT "gwf_sessions_user_id_gwf_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."gwf_users"("id") ON DELETE no action ON UPDATE no action;
+    EXCEPTION WHEN duplicate_object THEN null; END;
+
+    BEGIN
+        ALTER TABLE "gwf_workflow_execution_logs" ADD CONSTRAINT "gwf_workflow_execution_logs_execution_id_gwf_workflow_executions_id_fk" FOREIGN KEY ("execution_id") REFERENCES "public"."gwf_workflow_executions"("id") ON DELETE no action ON UPDATE no action;
+    EXCEPTION WHEN duplicate_object THEN null; END;
+
+    BEGIN
+        ALTER TABLE "gwf_workflow_executions" ADD CONSTRAINT "gwf_workflow_executions_workflow_id_gwf_workflows_id_fk" FOREIGN KEY ("workflow_id") REFERENCES "public"."gwf_workflows"("id") ON DELETE no action ON UPDATE no action;
+    EXCEPTION WHEN duplicate_object THEN null; END;
+
+    BEGIN
+        ALTER TABLE "gwf_workflow_executions" ADD CONSTRAINT "gwf_workflow_executions_user_id_gwf_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."gwf_users"("id") ON DELETE no action ON UPDATE no action;
+    EXCEPTION WHEN duplicate_object THEN null; END;
+
+    BEGIN
+        ALTER TABLE "gwf_workflows" ADD CONSTRAINT "gwf_workflows_user_id_gwf_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."gwf_users"("id") ON DELETE no action ON UPDATE no action;
+    EXCEPTION WHEN duplicate_object THEN null; END;
+END $$;
