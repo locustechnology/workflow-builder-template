@@ -15,7 +15,10 @@ export type NodeOutputs = {
   };
 };
 
-// Helper function to process new format references (@nodeId:DisplayName)
+// Helper function to process new format references (@nodeId:DisplayName or @nodeId)
+// Supports:
+//   {{@nodeId:DisplayName.field}}  — old format, falls back to label matching
+//   {{@nodeId.field}}              — new format, uses sanitized nodeId directly
 function processNewFormatReference(
   trimmed: string,
   nodeOutputs: NodeOutputs,
@@ -24,30 +27,65 @@ function processNewFormatReference(
   const withoutAt = trimmed.substring(1);
   const colonIndex = withoutAt.indexOf(":");
 
-  if (colonIndex === -1) {
-    return match;
+  let nodeId: string;
+  let fieldPath: string;
+  let displayName: string | undefined;
+
+  if (colonIndex !== -1) {
+    // Old format: nodeId:DisplayName.field
+    nodeId = withoutAt.substring(0, colonIndex);
+    const rest = withoutAt.substring(colonIndex + 1);
+    const dotIndex = rest.indexOf(".");
+    displayName = dotIndex !== -1 ? rest.substring(0, dotIndex) : rest;
+    fieldPath = dotIndex !== -1 ? rest.substring(dotIndex + 1) : "";
+  } else {
+    // New format: nodeId.field or just nodeId
+    const dotIndex = withoutAt.indexOf(".");
+    if (dotIndex !== -1) {
+      nodeId = withoutAt.substring(0, dotIndex);
+      fieldPath = withoutAt.substring(dotIndex + 1);
+    } else {
+      nodeId = withoutAt;
+      fieldPath = "";
+    }
   }
 
-  const nodeId = withoutAt.substring(0, colonIndex);
-  const rest = withoutAt.substring(colonIndex + 1);
-  const dotIndex = rest.indexOf(".");
-  const fieldPath = dotIndex !== -1 ? rest.substring(dotIndex + 1) : "";
+  // Sanitize exactly like the executor does when writing to the outputs map:
+  // nodeId.replace(/[^a-zA-Z0-9]/g, "_")  e.g. "trigger-1" → "trigger_1"
+  const sanitizedNodeId = nodeId.replace(/[^a-zA-Z0-9]/g, "_");
+
+  // Look up by sanitized ID, then fall back to label matching.
+  // For new-format (no colon), use the raw nodeId as the label to search for.
+  function findNodeOutput(): { label: string; data: unknown } | undefined {
+    if (nodeOutputs[sanitizedNodeId]) return nodeOutputs[sanitizedNodeId];
+    const labelToMatch = displayName ?? nodeId;
+    const normalized = labelToMatch.trim().toLowerCase();
+    for (const output of Object.values(nodeOutputs)) {
+      if (output.label.trim().toLowerCase() === normalized) return output;
+    }
+    return undefined;
+  }
+  const nodeOutput = findNodeOutput();
 
   if (!fieldPath) {
-    const nodeOutput = nodeOutputs[nodeId];
     if (nodeOutput) {
       return formatValue(nodeOutput.data);
     }
     return match;
   }
 
-  const value = resolveFieldPath(nodeOutputs[nodeId]?.data, fieldPath);
+  if (!nodeOutput) {
+    return match;
+  }
+
+  const value = resolveFieldPath(nodeOutput.data, fieldPath);
   if (value !== undefined && value !== null) {
     return formatValue(value);
   }
 
   return match;
 }
+
 
 // Helper function to process legacy $ references ($nodeId)
 function processLegacyDollarReference(

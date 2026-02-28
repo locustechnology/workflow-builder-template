@@ -44,6 +44,7 @@ export const isPanelAnimatingAtom = atom<boolean>(false);
 export const hasSidebarBeenShownAtom = atom<boolean>(false);
 export const isSidebarCollapsedAtom = atom<boolean>(false);
 export const isTransitioningFromHomepageAtom = atom<boolean>(false);
+export const isWorkflowLoadedAtom = atom<boolean>(false);
 
 // Tracks nodes that are pending integration auto-select check
 // Don't show "missing integration" warning for these nodes
@@ -78,11 +79,12 @@ export const autosaveAtom = atom(
   null,
   async (get, set, options?: { immediate?: boolean }) => {
     const workflowId = get(currentWorkflowIdAtom);
+    const isLoaded = get(isWorkflowLoadedAtom);
     const nodes = get(nodesAtom);
     const edges = get(edgesAtom);
 
-    // Only autosave if we have a workflow ID
-    if (!workflowId) {
+    // Only autosave if we have a workflow ID and it has finished loading
+    if (!workflowId || !isLoaded) {
       return;
     }
 

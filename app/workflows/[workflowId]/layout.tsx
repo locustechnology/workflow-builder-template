@@ -47,14 +47,14 @@ export async function generateMetadata({
     : `${baseUrl}/og-default.png`;
 
   return {
-    title: `${title} | AI Workflow Builder`,
-    description: `View and explore the "${title}" workflow built with AI Workflow Builder.`,
+    title: `${title} | GoStudio Workflow`,
+    description: `View and explore the "${title}" workflow built with GoStudio Workflow.`,
     openGraph: {
-      title: `${title} | AI Workflow Builder`,
-      description: `View and explore the "${title}" workflow built with AI Workflow Builder.`,
+      title: `${title} | GoStudio Workflow`,
+      description: `View and explore the "${title}" workflow built with GoStudio Workflow.`,
       type: "website",
       url: workflowUrl,
-      siteName: "AI Workflow Builder",
+      siteName: "GoStudio Workflow",
       images: [
         {
           url: ogImageUrl,
@@ -66,8 +66,8 @@ export async function generateMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      title: `${title} | AI Workflow Builder`,
-      description: `View and explore the "${title}" workflow built with AI Workflow Builder.`,
+      title: `${title} | GoStudio Workflow`,
+      description: `View and explore the "${title}" workflow built with GoStudio Workflow.`,
       images: [ogImageUrl],
     },
   };
