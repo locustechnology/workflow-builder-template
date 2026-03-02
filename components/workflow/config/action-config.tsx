@@ -39,6 +39,7 @@ import {
 } from "@/plugins";
 import { ActionConfigRenderer } from "./action-config-renderer";
 import { SchemaBuilder, type SchemaField } from "./schema-builder";
+import { SwitchConfig } from "./switch-config";
 
 type ActionConfigProps = {
   config: Record<string, unknown>;
@@ -256,6 +257,14 @@ function SystemActionFields({
           onUpdateConfig={onUpdateConfig}
         />
       );
+    case "Switch":
+      return (
+        <SwitchConfig
+          config={config}
+          disabled={disabled}
+          onUpdateConfig={onUpdateConfig}
+        />
+      );
     default:
       return null;
   }
@@ -266,6 +275,7 @@ const SYSTEM_ACTIONS: Array<{ id: string; label: string }> = [
   { id: "HTTP Request", label: "HTTP Request" },
   { id: "Database Query", label: "Database Query" },
   { id: "Condition", label: "Condition" },
+  { id: "Switch", label: "Switch" },
 ];
 
 const SYSTEM_ACTION_IDS = SYSTEM_ACTIONS.map((a) => a.id);
