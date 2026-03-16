@@ -59,6 +59,12 @@ const SYSTEM_ACTIONS: ActionType[] = [
     description: "Branch based on a condition",
     category: "System",
   },
+  {
+    id: "Switch",
+    label: "Switch",
+    description: "Route to different branches based on rules",
+    category: "System",
+  },
 ];
 
 // Combine System actions with plugin actions
