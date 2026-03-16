@@ -17,6 +17,8 @@ export function AuthGate({ children }: { children: ReactNode }) {
     const [mode, setMode] = useState<"signin" | "signup">("signin");
     const [adminValidated, setAdminValidated] = useState(false);
     const [validating, setValidating] = useState(false);
+    const [requestingAccess, setRequestingAccess] = useState(false);
+    const [requestSuccess, setRequestSuccess] = useState(false);
 
     // Check if user is authenticated (not anonymous)
     const isAuthenticated =
@@ -46,6 +48,27 @@ export function AuthGate({ children }: { children: ReactNode }) {
             })
             .finally(() => setValidating(false));
     }, [isAuthenticated, adminValidated, validating]);
+
+    const handleRequestAccess = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        setRequestSuccess(false);
+        if (!email) { setError("Please enter your email to request access."); return; }
+        setError("");
+        setRequestingAccess(true);
+        try {
+            const res = await fetch("/api/request-access", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email }),
+            });
+            if (res.ok) { setRequestSuccess(true); toast.success("Access requested! We'll be in touch."); }
+            else { setError("Failed to send request. Please try again."); }
+        } catch {
+            setError("Failed to send request. Server error.");
+        } finally {
+            setRequestingAccess(false);
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -216,6 +239,15 @@ export function AuthGate({ children }: { children: ReactNode }) {
                             : mode === "signup"
                                 ? "Sign Up"
                                 : "Sign In"}
+                    </Button>
+                    <Button
+                        className="w-full"
+                        disabled={requestingAccess || loading || requestSuccess}
+                        onClick={handleRequestAccess}
+                        type="button"
+                        variant="outline"
+                    >
+                        {requestingAccess ? "Requesting..." : requestSuccess ? "Access Requested!" : "Request Access"}
                     </Button>
                 </form>
 
