@@ -34,11 +34,6 @@ const SYSTEM_ACTIONS: Record<string, StepImporter> = {
     importer: () => import("./steps/condition") as Promise<any>,
     stepFunction: "conditionStep",
   },
-  Switch: {
-    // biome-ignore lint/suspicious/noExplicitAny: Dynamic module import
-    importer: () => import("./steps/switch") as Promise<any>,
-    stepFunction: "switchStep",
-  },
 };
 
 type ExecutionResult = {
@@ -193,13 +188,6 @@ function evaluateConditionExpression(
       const evalContext: Record<string, unknown> = {};
       const resolvedValues: Record<string, unknown> = {};
       let transformedExpression = conditionExpression;
-
-      // Normalize {{@nodeId}}.path → {{@nodeId.path}} (users often write field path outside braces)
-      transformedExpression = transformedExpression.replace(
-        /\{\{@([^}]+)\}\}\.([\w.]+)/g,
-        "{{@$1.$2}}"
-      );
-
       // Matches both {{@nodeId:DisplayName.field}} and {{@nodeId.field}}
       const templatePattern = /\{\{@([^}]+)\}\}/g;
       const varCounter = { value: 0 };
@@ -313,42 +301,6 @@ async function executeActionStep(input: {
     });
   }
 
-  // Special handling for Switch action - resolve template vars in rule fields
-  if (actionType === "Switch") {
-    const systemAction = SYSTEM_ACTIONS.Switch;
-    const module = await systemAction.importer();
-
-    // Parse rules from config
-    let rules: Array<Record<string, unknown>> = [];
-    try {
-      const rulesRaw = config.rules;
-      if (typeof rulesRaw === "string") {
-        rules = JSON.parse(rulesRaw);
-      } else if (Array.isArray(rulesRaw)) {
-        rules = rulesRaw as Array<Record<string, unknown>>;
-      }
-    } catch {
-      console.error("[Switch] Failed to parse rules from config");
-    }
-
-    // Resolve template variables in each rule's field
-    const resolvedRules = rules.map((rule) => {
-      const fieldValue = rule.field as string;
-      if (fieldValue) {
-        const resolved = processTemplates({ field: fieldValue }, outputs);
-        return { ...rule, field: resolved.field as string };
-      }
-      return rule;
-    });
-
-    console.log("[Switch] Evaluating", resolvedRules.length, "rules");
-
-    return await module[systemAction.stepFunction]({
-      rules: resolvedRules,
-      _context: context,
-    });
-  }
-
   // Check system actions first (Database Query, HTTP Request)
   const systemAction = SYSTEM_ACTIONS[actionType];
   if (systemAction) {
@@ -394,15 +346,6 @@ function processTemplates(
       //   {{@nodeId:DisplayName.field}}  (old format with label)
       //   {{@nodeId.field}}              (new format, direct ID)
       let processedValue = value;
-
-      // Normalize {{@nodeId}}.path.to.field → {{@nodeId.path.to.field}}
-      // Users often write the dot-path outside the braces, which would
-      // otherwise stringify the entire output and append ".path" as literal text.
-      processedValue = processedValue.replace(
-        /\{\{@([^}]+)\}\}\.([\w.]+)/g,
-        "{{@$1.$2}}"
-      );
-
       const templatePattern = /\{\{@([^}]+)\}\}/g;
       processedValue = processedValue.replace(
         templatePattern,
@@ -537,11 +480,11 @@ export async function executeWorkflow(input: WorkflowExecutionInput) {
 
   // Build node and edge maps
   const nodeMap = new Map(nodes.map((n) => [n.id, n]));
-  const edgesBySource = new Map<string, WorkflowEdge[]>();
+  const edgesBySource = new Map<string, string[]>();
   for (const edge of edges) {
-    const edgeList = edgesBySource.get(edge.source) || [];
-    edgeList.push(edge);
-    edgesBySource.set(edge.source, edgeList);
+    const targets = edgesBySource.get(edge.source) || [];
+    targets.push(edge.target);
+    edgesBySource.set(edge.source, targets);
   }
 
   // Find trigger nodes
@@ -606,9 +549,9 @@ export async function executeWorkflow(input: WorkflowExecutionInput) {
         data: null,
       };
 
-      const nextEdges = edgesBySource.get(nodeId) || [];
+      const nextNodes = edgesBySource.get(nodeId) || [];
       await Promise.all(
-        nextEdges.map((edge) => executeNode(edge.target, visited))
+        nextNodes.map((nextNodeId) => executeNode(nextNodeId, visited))
       );
       return;
     }
@@ -684,24 +627,19 @@ export async function executeWorkflow(input: WorkflowExecutionInput) {
           return;
         }
 
-        // Process templates in config, but keep condition and rules unprocessed for special handling
-        const configForProcessing = { ...config };
+        // Process templates in config, but keep condition unprocessed for special handling
+        const configWithoutCondition = { ...config };
         const originalCondition = config.condition;
-        const originalRules = config.rules;
-        configForProcessing.condition = undefined;
-        configForProcessing.rules = undefined;
+        configWithoutCondition.condition = undefined;
 
         const processedConfig = processTemplates(
-          configForProcessing,
+          configWithoutCondition,
           outputs
         );
 
-        // Add back unprocessed fields (they have their own template handling)
+        // Add back the original condition (unprocessed)
         if (originalCondition !== undefined) {
           processedConfig.condition = originalCondition;
-        }
-        if (originalRules !== undefined) {
-          processedConfig.rules = originalRules;
         }
 
         // Build step context for logging (stepHandler will handle the logging)
@@ -781,15 +719,10 @@ export async function executeWorkflow(input: WorkflowExecutionInput) {
 
       // Execute next nodes
       if (result.success) {
-        const actionType = node.data.config?.actionType as string | undefined;
-
         // Check if this is a condition node
         const isConditionNode =
-          node.data.type === "action" && actionType === "Condition";
-
-        // Check if this is a switch node
-        const isSwitchNode =
-          node.data.type === "action" && actionType === "Switch";
+          node.data.type === "action" &&
+          node.data.config?.actionType === "Condition";
 
         if (isConditionNode) {
           // For condition nodes, only execute next nodes if condition is true
@@ -801,56 +734,32 @@ export async function executeWorkflow(input: WorkflowExecutionInput) {
           );
 
           if (conditionResult === true) {
-            const nextEdges = edgesBySource.get(nodeId) || [];
+            const nextNodes = edgesBySource.get(nodeId) || [];
             console.log(
               "[Workflow Executor] Condition is true, executing",
-              nextEdges.length,
+              nextNodes.length,
               "next nodes in parallel"
             );
+            // Execute all next nodes in parallel
             await Promise.all(
-              nextEdges.map((edge) => executeNode(edge.target, visited))
+              nextNodes.map((nextNodeId) => executeNode(nextNodeId, visited))
             );
           } else {
             console.log(
               "[Workflow Executor] Condition is false, skipping next nodes"
             );
           }
-        } else if (isSwitchNode) {
-          // For switch nodes, route to the matched handle only
-          const { matchedRuleIndex } = result.data as {
-            matchedRuleIndex: number;
-          };
-          const matchedHandle =
-            matchedRuleIndex >= 0
-              ? `rule-${matchedRuleIndex}`
-              : "fallback";
-          console.log(
-            "[Workflow Executor] Switch matched handle:",
-            matchedHandle
-          );
-
-          const nodeEdges = edgesBySource.get(nodeId) || [];
-          const matchedEdges = nodeEdges.filter(
-            (e) => e.sourceHandle === matchedHandle
-          );
-          console.log(
-            "[Workflow Executor] Switch routing to",
-            matchedEdges.length,
-            "next nodes"
-          );
-          await Promise.all(
-            matchedEdges.map((edge) => executeNode(edge.target, visited))
-          );
         } else {
-          // For non-condition/switch nodes, execute all next nodes in parallel
-          const nextEdges = edgesBySource.get(nodeId) || [];
+          // For non-condition nodes, execute all next nodes in parallel
+          const nextNodes = edgesBySource.get(nodeId) || [];
           console.log(
             "[Workflow Executor] Executing",
-            nextEdges.length,
+            nextNodes.length,
             "next nodes in parallel"
           );
+          // Execute all next nodes in parallel
           await Promise.all(
-            nextEdges.map((edge) => executeNode(edge.target, visited))
+            nextNodes.map((nextNodeId) => executeNode(nextNodeId, visited))
           );
         }
       }

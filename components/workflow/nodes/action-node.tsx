@@ -9,7 +9,6 @@ import {
   Database,
   EyeOff,
   GitBranch,
-  Route,
   XCircle,
   Zap,
 } from "lucide-react";
@@ -33,7 +32,6 @@ import {
   type WorkflowNodeData,
 } from "@/lib/workflow-store";
 import { findActionById, getIntegration } from "@/plugins";
-import { SwitchNode } from "./switch-node";
 
 // Helper to get display name for AI model
 const getModelDisplayName = (modelId: string): string => {
@@ -78,7 +76,6 @@ const SYSTEM_ACTION_LABELS: Record<string, string> = {
   "Database Query": "Database",
   Condition: "Condition",
   "Execute Code": "System",
-  Switch: "Flow",
 };
 
 // Helper to get integration name from action type
@@ -134,8 +131,6 @@ const getProviderLogo = (actionType: string) => {
       return <Code className="size-12 text-green-300" strokeWidth={1.5} />;
     case "Condition":
       return <GitBranch className="size-12 text-pink-300" strokeWidth={1.5} />;
-    case "Switch":
-      return <Route className="size-12 text-purple-300" strokeWidth={1.5} />;
     default:
       // Not a system action, continue to check plugin registry
       break;
@@ -259,11 +254,6 @@ export const ActionNode = memo(({ data, selected, id }: ActionNodeProps) => {
 
   const actionType = (data.config?.actionType as string) || "";
   const status = data.status;
-
-  // Delegate to SwitchNode for Switch action type
-  if (actionType === "Switch") {
-    return <SwitchNode data={data} id={id} selected={selected} />;
-  }
 
   // Check if this node has a generated image from the selected execution
   const nodeLog = executionLogs[id];

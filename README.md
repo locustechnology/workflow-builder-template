@@ -82,7 +82,7 @@ Visit [http://localhost:3000](http://localhost:3000) to get started.
 - **AI Gateway**: Generate Text, Generate Image
 - **Blob**: Put Blob, List Blobs
 - **Clerk**: Get User, Create User, Update User, Delete User
-- **gostudio.ai**: Generate Image, Generate Video, Upscale Image, Remove Background, Image to Image
+- **fal.ai**: Generate Image, Generate Video, Upscale Image, Remove Background, Image to Image
 - **Firecrawl**: Scrape URL, Search Web
 - **GitHub**: Create Issue, List Issues, Get Issue, Update Issue
 - **Linear**: Create Ticket, Find Issues
